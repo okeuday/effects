@@ -71,7 +71,7 @@ checked with an assert function (that is not omitted with compilation options).
   any way an unignored signal could be raised.  For each instance,
   the developer should use the `effects::context` `set_exception` function.
 * The `effects::region<T &>` type is assumed to be a reference to global data.
-* Using stdout, stderr, or other file descriptors is a reference effect
+* Using stdout, stderr, or other file descriptors is a `reference` effect
   that could be created as a `effects::region<T &>` type using a local variable
   but requires the developer is aware of the file descriptors being used.
 * All `effects::region` non-null pointers are assumed to be allocated from
@@ -86,7 +86,7 @@ is still helpful for ensuring source code is reliable.
 
 A programming language with a compile-time
 [effect system](https://en.wikipedia.org/wiki/Effect_system)
-connected to the programming languages type system would help to avoid
+connected to the programming language's type system would help to avoid
 developer mistakes and ensure enforcement.
 
 ## Futher Information
