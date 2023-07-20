@@ -112,7 +112,8 @@ void test_pointers()
     c.clear();
     // string literals look like they are allocated on the heap
     // because there isn't a portable way of checking whether a pointer
-    // is not on the stack, so this is invalid and expected
+    // is not on the stack or is in a read-only data (or text) section,
+    // so this is invalid and expected
     region<char const *> p3_value =
         c(static_cast<char const *>("invalid write effect"));
     assert(c.kind() == 0x0008);
