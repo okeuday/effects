@@ -91,7 +91,7 @@ template <typename T> class region
     public:
         region(region const & o) noexcept = default;
 
-        operator T const & () const noexcept
+        operator T const & () const & noexcept
         {
             return m_value;
         }
