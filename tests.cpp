@@ -40,9 +40,24 @@ void test_fpe()
 {
     context c(kind::reference | kind::fpe, context_type::terminating);
     region<double> value_rounded = c(2.0 / 3);
+#if defined(__clang__)
+    assert(c.kind() == 0x2014);
+    assert(c.kind() ==
+           (kind_fpe::inexact | kind::fpe | kind::reference));
+#elif defined(__GNUC__)
+    // g++ does not provide the inexact floating-point exception in this
+    // situation, probably because it is seen as a performance problem
+    // when the inexact exception is used for any round that occurs,
+    // though there doesn't appear to be a way to enable it either with
+    // a cross-platform gcc command-line flag.
+    // https://gcc.gnu.org/c99status.html
+    // says "required exceptions may not be generated"
     assert(c.kind() == 0x0004);
-    assert(c.has_reference());
     assert(c.kind() == kind::reference);
+#else
+#error "unknown compiler!"
+#endif
+    assert(c.has_reference());
     assert(c.valid());
     c.clear();
     region<double> value_invalid = c(0.0 / 0.0);
@@ -95,10 +110,25 @@ void test_fpe()
 
 void test_pointers()
 {
+#if defined(__clang__)
+    context c(kind::fpe |
+              kind::reference | kind::write, context_type::terminating);
+#elif defined(__GNUC__)
     context c(kind::reference | kind::write, context_type::terminating);
+#else
+#error "unknown compiler!"
+#endif
     region<double *> p1_value = c(new double(2.0 / 3));
+#if defined(__clang__)
+    assert(c.kind() == 0x201c);
+    assert(c.kind() ==
+           (kind_fpe::inexact | kind::fpe | kind::reference | kind::write));
+#elif defined(__GNUC__)
     assert(c.kind() == 0x000c);
     assert(c.kind() == (kind::reference | kind::write));
+#else
+#error "unknown compiler!"
+#endif
     assert(c.valid());
     delete p1_value;
     p1_value = 0;

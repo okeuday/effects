@@ -29,7 +29,7 @@
 
 #include <utility>
 #include <type_traits>
-#include <fenv.h>
+#include <cfenv>
 
 namespace effects
 {
@@ -85,22 +85,22 @@ template <typename T> class region
                       "Do not use a reference type");
 
         friend class context;
-        region(context & c, T && value) noexcept;
-        region(context & c, T const & value) noexcept;
+        constexpr region(context & c, T && value) noexcept;
+        constexpr region(context & c, T const & value) noexcept;
 
     public:
-        region(region const & o) noexcept = default;
+        constexpr region(region const & o) noexcept = default;
 
-        operator T const & () const & noexcept
+        [[nodiscard]] constexpr operator T const & () const & noexcept
         {
             return m_value;
         }
-        operator T && () && noexcept
+        [[nodiscard]] constexpr operator T && () && noexcept
         {
             return std::move(m_value);
         }
-        region<T> & operator = (T && rhs) noexcept;
-        region<T> & operator = (region<T> const & rhs) noexcept;
+        constexpr region<T> & operator = (T && rhs) noexcept;
+        constexpr region<T> & operator = (region<T> const & rhs) noexcept;
 
     private:
         context & m_context;
@@ -112,12 +112,12 @@ template <typename T> class region<T const &>
 {
     private:
         friend class context;
-        region(context & c, T const & value) noexcept;
+        constexpr region(context & c, T const & value) noexcept;
 
     public:
-        region(region const & o) noexcept = default;
+        constexpr region(region const & o) noexcept = default;
 
-        operator T const & () const noexcept
+        [[nodiscard]] constexpr operator T const & () const noexcept
         {
             return m_constant;
         }
@@ -132,20 +132,20 @@ template <typename T> class region<T &>
 {
     private:
         friend class context;
-        region(context & c, T & value) noexcept;
+        constexpr region(context & c, T & value) noexcept;
 
     public:
-        region(region const & o) noexcept = default;
+        constexpr region(region const & o) noexcept = default;
 
-        operator T const & () const noexcept
+        [[nodiscard]] constexpr operator T const & () const noexcept
         {
             return m_reference;
         }
-        operator T && () && noexcept
+        [[nodiscard]] constexpr operator T && () && noexcept
         {
             return std::move(m_reference);
         }
-        region<T &> & operator = (T && rhs) noexcept;
+        constexpr region<T &> & operator = (T && rhs) noexcept;
 
     private:
         context & m_context;
@@ -185,8 +185,8 @@ using is_floating_point = std::is_floating_point< remove_all_pointers_t<T> >;
 class context
 {
     public:
-        context(unsigned int const kind_valid,
-                context_type const type) noexcept :
+        constexpr context(unsigned int const kind_valid,
+                          context_type const type) noexcept :
             m_kind_invalid((~kind_valid) & kind::bitmask),
             m_kind(kind::pure)
         {
@@ -194,16 +194,17 @@ class context
             {
                 m_kind |= kind::nonterminating;
             }
-            ::feclearexcept(context::fpe_all);
+            std::feclearexcept(context::fpe_all);
         }
-        context(context const & o) noexcept = delete;
+        constexpr context(context const & o) noexcept = delete;
 
-        template <typename T> region<T> operator ()(T && t) noexcept
+        template <typename T>
+        [[nodiscard]] constexpr region<T> operator ()(T && t) noexcept
         {
             return region<T>(*this, std::forward<T>(t));
         }
 
-        void set_exception() noexcept
+        constexpr void set_exception() noexcept
         {
             // An exception was thrown, an unignored signal was raised or
             // execution will terminate with a function call
@@ -211,7 +212,7 @@ class context
             m_kind |= kind::exception;
         }
 
-        void set_variation_os() noexcept
+        constexpr void set_variation_os() noexcept
         {
             // Execution will vary due to the Operating System (OS) used,
             // preventing the functionality from being mathematically pure.
@@ -221,7 +222,7 @@ class context
             m_kind |= kind::variation_os;
         }
 
-        void set_variation_hardware() noexcept
+        constexpr void set_variation_hardware() noexcept
         {
             // Execution will vary due to the hardware used,
             // preventing the functionality from being mathematically pure.
@@ -235,62 +236,62 @@ class context
         void clear() noexcept
         {
             m_kind = kind::pure;
-            ::feclearexcept(context::fpe_all);
+            std::feclearexcept(context::fpe_all);
         }
 
-        bool valid() noexcept
+        [[nodiscard]] bool valid() noexcept
         {
             update();
             return (m_kind_invalid & m_kind) == 0;
         }
 
-        unsigned int kind() const noexcept
+        [[nodiscard]] unsigned int kind() const noexcept
         {
             return m_kind;
         }
 
-        bool is_pure() noexcept
+        [[nodiscard]] bool is_pure() noexcept
         {
             update();
             return m_kind == kind::pure;
         }
-        bool has_nonterminating() noexcept
+        [[nodiscard]] bool has_nonterminating() noexcept
         {
             update();
             return m_kind & kind::nonterminating;
         }
-        bool has_exception() noexcept
+        [[nodiscard]] bool has_exception() noexcept
         {
             update();
             return m_kind & kind::exception;
         }
-        bool has_reference() noexcept
+        [[nodiscard]] bool has_reference() noexcept
         {
             update();
             return m_kind & kind::reference;
         }
-        bool has_write() noexcept
+        [[nodiscard]] bool has_write() noexcept
         {
             update();
             return m_kind & kind::write;
         }
-        bool has_fpe() noexcept
+        [[nodiscard]] bool has_fpe() noexcept
         {
             update();
             return m_kind & kind::fpe;
         }
-        bool has_fpe(unsigned int & kind) noexcept
+        [[nodiscard]] bool has_fpe(unsigned int & kind) noexcept
         {
             bool const result = has_fpe();
             kind = m_kind;
             return result;
         }
-        bool has_variation_os() noexcept
+        [[nodiscard]] bool has_variation_os() noexcept
         {
             update();
             return m_kind & kind::variation_os;
         }
-        bool has_variation_hardware() noexcept
+        [[nodiscard]] bool has_variation_hardware() noexcept
         {
             update();
             return m_kind & kind::variation_hardware;
@@ -340,7 +341,7 @@ class context
         }
 
         template <typename T>
-        static bool is_memory_owned(T const & value)
+        [[nodiscard]] static constexpr bool is_memory_owned(T const & value)
         {
             // if the value is a non-null pointer, assume it is owned memory
             // on the heap which implies a write effect
@@ -350,39 +351,39 @@ class context
 
         void update(unsigned int kind, bool const floating_point) noexcept
         {
-            if (floating_point && ::fetestexcept(context::fpe_all))
+            if (floating_point && std::fetestexcept(context::fpe_all))
             {
 #ifdef FE_INVALID
-                if (::fetestexcept(FE_INVALID))
+                if (std::fetestexcept(FE_INVALID))
                 {
                     kind |= kind::fpe | kind_fpe::invalid;
                 }
 #endif
 #ifdef FE_DIVBYZERO
-                if (::fetestexcept(FE_DIVBYZERO))
+                if (std::fetestexcept(FE_DIVBYZERO))
                 {
                     kind |= kind::fpe | kind_fpe::divide_by_zero;
                 }
 #endif
 #ifdef FE_OVERFLOW
-                if (::fetestexcept(FE_OVERFLOW))
+                if (std::fetestexcept(FE_OVERFLOW))
                 {
                     kind |= kind::fpe | kind_fpe::overflow;
                 }
 #endif
 #ifdef FE_UNDERFLOW
-                if (::fetestexcept(FE_UNDERFLOW))
+                if (std::fetestexcept(FE_UNDERFLOW))
                 {
                     kind |= kind::fpe | kind_fpe::underflow;
                 }
 #endif
 #ifdef FE_INEXACT
-                if (::fetestexcept(FE_INEXACT))
+                if (std::fetestexcept(FE_INEXACT))
                 {
                     kind |= kind::fpe | kind_fpe::inexact;
                 }
 #endif
-                ::feclearexcept(context::fpe_all);
+                std::feclearexcept(context::fpe_all);
             }
             m_kind |= kind;
         }
@@ -392,7 +393,7 @@ class context
             update(kind::pure, true);
         }
 
-        static unsigned int constexpr fpe_all =
+        static constexpr unsigned int fpe_all =
 #ifdef FE_INVALID
             FE_INVALID |
 #endif
@@ -415,7 +416,7 @@ class context
 };
 
 template <typename T>
-region<T>::region(context & c, T && value) noexcept :
+constexpr region<T>::region(context & c, T && value) noexcept :
     m_context(c),
     m_value(std::move(value))
 {
@@ -423,7 +424,7 @@ region<T>::region(context & c, T && value) noexcept :
 }
 
 template <typename T>
-region<T>::region(context & c, T const & value) noexcept :
+constexpr region<T>::region(context & c, T const & value) noexcept :
     m_context(c),
     m_value(value)
 {
@@ -431,15 +432,15 @@ region<T>::region(context & c, T const & value) noexcept :
 }
 
 template <typename T>
-region<T> & region<T>::operator = (T && rhs) noexcept
+constexpr region<T> & region<T>::operator = (T && rhs) noexcept
 {
-    m_value = m_value;
+    m_value = rhs;
     m_context.created_value(m_value);
     return *this;
 }
 
 template <typename T>
-region<T> & region<T>::operator = (region<T> const & rhs) noexcept
+constexpr region<T> & region<T>::operator = (region<T> const & rhs) noexcept
 {
     m_value = rhs.m_value;
     m_context.created_value(m_value);
@@ -447,7 +448,7 @@ region<T> & region<T>::operator = (region<T> const & rhs) noexcept
 }
 
 template <typename T>
-region<T const &>::region(context & c, T const & value) noexcept :
+constexpr region<T const &>::region(context & c, T const & value) noexcept :
     m_context(c),
     m_constant(value)
 {
@@ -455,7 +456,7 @@ region<T const &>::region(context & c, T const & value) noexcept :
 }
 
 template <typename T>
-region<T &>::region(context & c, T & value) noexcept :
+constexpr region<T &>::region(context & c, T & value) noexcept :
     m_context(c),
     m_reference(value)
 {
@@ -463,7 +464,7 @@ region<T &>::region(context & c, T & value) noexcept :
 }
 
 template <typename T>
-region<T &> & region<T &>::operator = (T && rhs) noexcept
+constexpr region<T &> & region<T &>::operator = (T && rhs) noexcept
 {
     m_reference = rhs;
     m_context.created_reference(m_reference);
