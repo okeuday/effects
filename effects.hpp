@@ -89,6 +89,7 @@ template <typename T> class region
         constexpr region(context & c, T const & value) noexcept;
 
     public:
+        constexpr region(region && o) noexcept = default;
         constexpr region(region const & o) noexcept = default;
 
         [[nodiscard]] constexpr operator T const & () const & noexcept
@@ -208,7 +209,34 @@ class context
         {
             // An exception was thrown, an unignored signal was raised or
             // execution will terminate with a function call
-            // (like exit or abort).
+            // (like exit or abort).  Throwing an exception can be pure
+            // because it doesn't interfere with referential transparency,
+            // though throwing an exception is tracked as an effect due to the
+            // need to catch the exception.
+            //
+            // Regarding stdlib.h:
+            // If the exit function was called, it operates like an exception
+            // was thrown.  If the atexit function
+            // (or the deprecated on_exit function) was called, it operates
+            // like catch.
+            // If the abort function was called, it operates like an exception
+            // was thrown.  If a signal handler exists for the SIGABRT signal,
+            // the signal handler would operate like catch.
+            //
+            // Regarding setjmp.h:
+            // If the setjmp function was called, it operates like catch.
+            // All longjmp function calls would be tracked as exceptions with
+            // the setjmp function preventing referential transparency
+            // (with the assumption that its saved calling environment
+            //  information is used due to a longjmp function call).
+            //
+            // Regarding ucontext.h:
+            // If the setcontext function or the swapcontext function was
+            // called, it operates like catch.  All ucontext_t data created
+            // with getcontext and modified with makecontext would be
+            // tracked as exceptions with the setcontext/swapcontext function
+            // preventing referential transparency
+            // (with the assumption that all ucontext_t data is used).
             m_kind |= kind::exception;
         }
 
