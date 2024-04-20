@@ -12,6 +12,8 @@ to have more referentially transparent functions.
 is often misunderstood and considered unimportant, though
 referential transparency provides a clear benefit for ensuring source code
 is reliable, both in its current form and as it changes in the future.
+A function is referentially transparent if a function call with
+specific arguments can always be substituted with its return value.
 
 When functions are referentially transparent, all testing can be limited to
 the function inputs to ensure the function outputs are valid.
@@ -28,6 +30,24 @@ C++ to make their tracking simpler and easier to understand.
 Often IO operations are considered the main processing that prevents a
 function from being referentially transparent, but that is an
 oversimplification that avoids tracking the types of effects that exist.
+
+## What is "purity"?
+
+When software developers use the term "purity" or "pure function"
+they are describing the least effects common to their programming language.
+Mathematical purity is referential transparency in all possible
+execution environments (any hardware variation with any operating system).
+The [Haskell](https://en.wikipedia.org/wiki/Haskell) programming language
+has its purity (in source code outside of monads with lazy evaluation)
+as execution that can be nonterminating, contain (asynchronous) exceptions and
+have variation due to the Operating System (OS) used or the hardware.used.
+
+A programming language may describe its purity as only relating to a
+single execution (in a single execution environment) and that can be
+called "operational purity" instead of mathematical purity.
+Pure functions with operational purity could provide different return values
+with the same function arguments if different execution environments are
+compared (different Operating Systems and/or different hardware).
 
 ## How is `effects.hpp` used?
 
