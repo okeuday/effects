@@ -113,7 +113,7 @@ developer mistakes and ensure enforcement.
 
 `effects.hpp` was partly inspired by "Function Effect Tags" in the
 [ATS2/Postiats programming language](https://en.wikipedia.org/wiki/ATS_(programming_language))
-(described [here](https://github.com/CloudI/CloudI/blob/0845ec697b35e46a0af8426f843f8fd3c4080039/src/api/ats/v2/cloudi.sats#L98)
+(described [here](https://github.com/CloudI/CloudI/blob/ea7d2354951dfc5e26db96cbd019d7f3081e0fe4/src/api/ats/v2/cloudi.sats#L98)
 and [here](https://bluishcoder.co.nz/2010/06/13/functions-in-ats.html)).
 
 ## Test
