@@ -120,6 +120,37 @@ and [here](https://bluishcoder.co.nz/2010/06/13/functions-in-ats.html)).
 
     make
 
+## C/C++ Language Effect Systems
+
+The C/C++ compiler attributes provide a minimal effect system
+that is focused on compiler optimization related to reordering and
+parallelization of function calls, not on achieving referential transparency.
+With referential transparency, the function call could have its return
+value substituted (memoization) to provide a better optimization.
+
+### [GCC](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html)/[clang](https://clang.llvm.org/docs/AttributeReference.html) Compiler Attributes
+
+The GCC/clang compiler attributes below can be used with function declarations
+or function definitions to provide constraints on the effects in functions which
+can be used for optimization purposes.  The main attributes are listed below:
+
+* `__attribute__((pure))` == `exception | reference | write | fpe | variation_os | variation_hardware`
+* `__attribute__((const))` == `exception | fpe | variation_os | variation_hardware`
+
+Unfortunately, the focus is only on the return value of the function with
+`pure` allowed to read from mutable memory if it doesn't change the
+return value (a guarantee that should be unprovable at compile-time).
+However, the `pure` compiler attribute does define what C/C++ purity is.
+
+### [C23](https://en.cppreference.com/w/c/language/attributes.html) Compiler Attributes
+
+* `[[reproducible]]` == `nonterminating | exception | reference | write | fpe | variation_os | variation_hardware`
+* `[[unsequenced]]` == `nonterminating | exception | fpe | variation_os | variation_hardware`
+
+`reproducible` is the C23 standardization based on `pure` and `unsequenced`
+is the C23 standardization based on `const`.  The difference is that
+both `reproducible` and `unsequenced` allow the `nonterminating` effect.
+
 ## Author
 
 Michael Truog (mjtruog at protonmail dot com)

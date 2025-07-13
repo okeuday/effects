@@ -33,7 +33,7 @@ void test_integers()
     assert(c.is_pure());
     assert(c.valid());
     c.clear();
-    // 1 / 0 will raise SIGFPE with the result undefined
+    // 1 / 0 and 1 % 0 will raise SIGFPE with the result undefined
 }
 
 void test_fpe()
